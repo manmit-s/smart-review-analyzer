@@ -3,3 +3,6 @@
 
 #---Virtual Environments
 .venv
+
+#---Exported CSV
+*.csv
