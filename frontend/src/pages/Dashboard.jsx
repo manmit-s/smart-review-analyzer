@@ -39,9 +39,9 @@ export default function Dashboard() {
               <label className="text-sm font-medium text-gray-400">Max Reviews</label>
               <div className="relative border border-[#2a2a35] rounded-lg bg-[#111016]">
                 <select className="w-full appearance-none bg-transparent p-3 text-white focus:outline-none">
-                  <option>100 Reviews</option>
-                  <option>500 Reviews</option>
-                  <option>1000 Reviews</option>
+                  <option className="bg-[#1C1B22] text-white">100 Reviews</option>
+                  <option className="bg-[#1C1B22] text-white">500 Reviews</option>
+                  <option className="bg-[#1C1B22] text-white">1000 Reviews</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-3.5 text-gray-500 pointer-events-none" size={18} />
               </div>
@@ -50,14 +50,14 @@ export default function Dashboard() {
               <label className="text-sm font-medium text-gray-400">Sort Preference</label>
               <div className="relative border border-[#2a2a35] rounded-lg bg-[#111016]">
                 <select className="w-full appearance-none bg-transparent p-3 text-white focus:outline-none">
-                  <option>Most Helpful</option>
-                  <option>Most Recent</option>
+                  <option className="bg-[#1C1B22] text-white">Most Helpful</option>
+                  <option className="bg-[#1C1B22] text-white">Most Recent</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-3.5 text-gray-500 pointer-events-none" size={18} />
               </div>
             </div>
           </div>
-          <button className="w-full bg-gradient-to-r from-[#625885] to-[#CCBFF3] hover:opacity-90 hover:shadow-[0_0_10px_#CCBFF3] hover:shadow-[0_0_10px_#CCBFF3] hover:shadow-[0_0_10px_#CCBFF3] transition rounded-lg p-3 font-semibold text-white shadow-lg">
+          <button className="w-full bg-gradient-to-r from-[#625885] to-[#CCBFF3] hover:opacity-90 hover:shadow-[0_0_10px_#CCBFF3] transition rounded-lg p-3 font-semibold text-white shadow-lg">
             Start Extraction
           </button>
         </div>
