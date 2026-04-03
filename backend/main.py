@@ -1,9 +1,11 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import text, func
+from typing import Optional
 import time
 import re
+import requests
 import models, schemas
 from database import engine, get_db
 from services.scraper import fetch_steam_reviews
@@ -62,11 +64,43 @@ def extract_reviews(request: schemas.ExtractRequest, db: Session = Depends(get_d
     }
 
 @app.get("/api/reviews", response_model=schemas.PaginatedReviews)
-def get_recent_reviews(limit: int = 10, skip: int = 0, db: Session = Depends(get_db)):
-    # Get newest reviews across the system with pagination
-    total = db.query(models.Review).count()
-    reviews = db.query(models.Review).order_by(models.Review.created_at.desc()).offset(skip).limit(limit).all()
+def get_recent_reviews(
+    limit: int = 10, 
+    skip: int = 0, 
+    sentiment: Optional[str] = None, 
+    rating: Optional[float] = None, 
+    product_id: Optional[str] = None,
+    db: Session = Depends(get_db)):
+    
+    query = db.query(models.Review)
+    if sentiment:
+        query = query.filter(models.Review.sentiment == sentiment)
+    if rating:
+        query = query.filter(models.Review.rating == rating)
+    if product_id:
+        query = query.filter(models.Review.product_id == product_id)
+        
+    total = query.count()
+    reviews = query.order_by(models.Review.created_at.desc()).offset(skip).limit(limit).all()
     return {"total": total, "items": reviews}
+
+app_name_cache = {}
+
+@app.get("/api/games/{app_id}")
+def get_game_name(app_id: str):
+    if app_id in app_name_cache:
+        return {"name": app_name_cache[app_id]}
+    try:
+        resp = requests.get(f"https://store.steampowered.com/api/appdetails?appids={app_id}", timeout=5)
+        if resp.status_code == 200:
+            data = resp.json()
+            if data and str(app_id) in data and data[str(app_id)].get("success"):
+                name = data[str(app_id)]["data"]["name"]
+                app_name_cache[app_id] = name
+                return {"name": name}
+    except Exception as e:
+        print("Error fetching game name:", e)
+    return {"name": f"App ID {app_id}"}
 
 @app.get("/api/analytics", response_model=schemas.AnalyticsResponse)
 def get_analytics(db: Session = Depends(get_db)):
