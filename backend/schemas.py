@@ -21,6 +21,10 @@ class ReviewResponse(ReviewBase):
     class Config:
         from_attributes = True
 
+class PaginatedReviews(BaseModel):
+    total: int
+    items: List[ReviewResponse]
+
 class AnalyticsResponse(BaseModel):
     total_scraped: int
     avg_rating: float

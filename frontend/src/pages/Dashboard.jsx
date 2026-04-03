@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Bell, User, Link as LinkIcon, ChevronDown, Activity, Download, Eye, MoreVertical, ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
@@ -11,12 +11,15 @@ export default function Dashboard() {
   const [stats, setStats] = useState({ global: 0, latency: 142, rate: 98.2, queue: 0 });
   const [loading, setLoading] = useState(false);
   const [reviews, setReviews] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const limit = 5;
 
   useEffect(() => {
     // Load initial reviews and stats
     fetchStats();
     fetchReviews();
-  }, []);
+  }, [currentPage]);
 
   const fetchStats = async () => {
     try {
@@ -32,10 +35,12 @@ export default function Dashboard() {
 
   const fetchReviews = async () => {
     try {
-      const res = await fetch("http://localhost:8000/api/reviews?limit=5");
+      const skip = (currentPage - 1) * limit;
+      const res = await fetch(`http://localhost:8000/api/reviews?limit=${limit}&skip=${skip}`);
       if (res.ok) {
         const data = await res.json();
-        setReviews(data);
+        setReviews(data.items);
+        setTotalReviews(data.total);
       }
     } catch (e) {
       console.error(e);
@@ -86,8 +91,8 @@ export default function Dashboard() {
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-400">Product URL or ID</label>
             <div className="relative">
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder="https://store.steampowered.com/app/..."
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
@@ -119,8 +124,8 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-          <button 
-            onClick={handleExtraction} 
+          <button
+            onClick={handleExtraction}
             disabled={loading}
             className="w-full bg-gradient-to-r from-[#625885] to-[#CCBFF3] hover:opacity-90 hover:shadow-[0_0_10px_#CCBFF3] transition rounded-lg p-3 font-semibold text-white shadow-lg disabled:opacity-50"
           >
@@ -182,20 +187,19 @@ export default function Dashboard() {
                       <div className="h-8 w-8 rounded-full bg-[#2a2a35] flex items-center justify-center text-xs font-bold text-[#CCBFF3]">
                         {r.reviewer_name?.charAt(0) || "U"}
                       </div>
-                      <div className="font-medium text-gray-200">{r.reviewer_name?.slice(0, 15)}</div>
+                      <div className="font-medium text-gray-200">ID: {r.reviewer_name?.slice(-6) || "Unknown"}</div>
                     </div>
                     <div className="flex text-gray-400">
-                       <span className="px-2.5 py-1 bg-white/10 rounded-md text-xs font-medium text-gray-300">
-                         {r.rating === "Recommended" ? "Up" : r.rating === "Not Recommended" ? "Down" : r.rating}
-                       </span>
+                      <span className="px-2.5 py-1 bg-white/10 rounded-md text-xs font-medium text-gray-300">
+                        {r.rating === "Recommended" ? "Up" : r.rating === "Not Recommended" ? "Down" : r.rating}
+                      </span>
                     </div>
-                    <div className="text-sm text-gray-400 truncate pr-8" title={r.content}>{r.content}</div>
+                    <div className="text-sm text-gray-400 truncate pr-8" title={r.review_content}>{r.review_content}</div>
                     <div className="flex justify-center">
-                      <span className={`px-3 py-1 border text-xs font-medium rounded-full ${
-                        r.sentiment === "Positive" ? "bg-green-400/10 border-green-500/30 text-green-400" :
+                      <span className={`px-3 py-1 border text-xs font-medium rounded-full ${r.sentiment === "Positive" ? "bg-green-400/10 border-green-500/30 text-green-400" :
                         r.sentiment === "Negative" ? "bg-red-400/10 border-red-500/30 text-red-400" :
-                        "bg-[#2a2a35] border-[#3e3e4a] text-gray-400"
-                      }`}>
+                          "bg-[#2a2a35] border-[#3e3e4a] text-gray-400"
+                        }`}>
                         {r.sentiment}
                       </span>
                     </div>
@@ -208,21 +212,35 @@ export default function Dashboard() {
 
           {/* Pagination */}
           <div className="flex justify-between items-center text-sm text-gray-500 mt-2 px-1">
-            <div>Showing 3 of 152 extraction results</div>
+            <div>Showing {Math.min((currentPage * limit), totalReviews)} of {totalReviews} extraction results</div>
             <div className="flex gap-2">
-              <button className="h-8 w-8 rounded bg-[#1C1B22] border border-[#2a2a35] flex items-center justify-center hover:bg-[#2a2a35]"><ChevronLeft size={16} /></button>
-              <button className="h-8 w-8 rounded bg-[#625885] text-white flex items-center justify-center font-medium">1</button>
-              <button className="h-8 w-8 rounded bg-[#1C1B22] border border-[#2a2a35] flex items-center justify-center hover:bg-[#2a2a35] hover:text-white text-gray-400 font-medium">2</button>
-              <button className="h-8 w-8 rounded bg-[#1C1B22] border border-[#2a2a35] flex items-center justify-center hover:bg-[#2a2a35] hover:text-white text-gray-400 font-medium">3</button>
-              <button className="h-8 w-8 rounded bg-[#1C1B22] border border-[#2a2a35] flex items-center justify-center hover:bg-[#2a2a35]"><ChevronRight size={16} /></button>
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                className="h-8 w-8 rounded bg-[#1C1B22] border border-[#2a2a35] flex items-center justify-center hover:bg-[#2a2a35] disabled:opacity-50"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <div className="h-8 px-4 rounded bg-[#625885] text-white flex items-center justify-center font-medium">
+                Page {currentPage} of {Math.max(1, Math.ceil(totalReviews / limit))}
+              </div>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(Math.ceil(totalReviews / limit), p + 1))}
+                disabled={currentPage >= Math.ceil(totalReviews / limit)}
+                className="h-8 w-8 rounded bg-[#1C1B22] border border-[#2a2a35] flex items-center justify-center hover:bg-[#2a2a35] disabled:opacity-50"
+              >
+                <ChevronRight size={16} />
+              </button>
             </div>
           </div>
+
         </div>
       </main>
       <Footer />
     </div>
   );
 }
+
 
 
 

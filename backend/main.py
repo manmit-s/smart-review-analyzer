@@ -61,11 +61,12 @@ def extract_reviews(request: schemas.ExtractRequest, db: Session = Depends(get_d
         "sentiment_score": sentiment_score
     }
 
-@app.get("/api/reviews", response_model=list[schemas.ReviewResponse])
-def get_recent_reviews(limit: int = 10, db: Session = Depends(get_db)):
-    # Get newest reviews across the system
-    reviews = db.query(models.Review).order_by(models.Review.created_at.desc()).limit(limit).all()
-    return reviews
+@app.get("/api/reviews", response_model=schemas.PaginatedReviews)
+def get_recent_reviews(limit: int = 10, skip: int = 0, db: Session = Depends(get_db)):
+    # Get newest reviews across the system with pagination
+    total = db.query(models.Review).count()
+    reviews = db.query(models.Review).order_by(models.Review.created_at.desc()).offset(skip).limit(limit).all()
+    return {"total": total, "items": reviews}
 
 @app.get("/api/analytics", response_model=schemas.AnalyticsResponse)
 def get_analytics(db: Session = Depends(get_db)):
