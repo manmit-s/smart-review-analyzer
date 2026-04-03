@@ -1,10 +1,72 @@
-﻿import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, User, Link as LinkIcon, ChevronDown, Activity, Download, Eye, MoreVertical, ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
 export default function Dashboard() {
   const [url, setUrl] = useState('');
+  const [maxReviews, setMaxReviews] = useState(100);
+  const [sortPref, setSortPref] = useState('recent');
+
+  const [stats, setStats] = useState({ global: 0, latency: 142, rate: 98.2, queue: 0 });
+  const [loading, setLoading] = useState(false);
+  const [reviews, setReviews] = useState([]);
+
+  useEffect(() => {
+    // Load initial reviews and stats
+    fetchStats();
+    fetchReviews();
+  }, []);
+
+  const fetchStats = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/api/analytics");
+      if (res.ok) {
+        const data = await res.json();
+        setStats(prev => ({ ...prev, global: data.total_scraped || 0 }));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const fetchReviews = async () => {
+    try {
+      const res = await fetch("http://localhost:8000/api/reviews?limit=5");
+      if (res.ok) {
+        const data = await res.json();
+        setReviews(data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleExtraction = async () => {
+    if (!url) return alert("Please enter a valid Steam URL or App ID");
+    setLoading(true);
+    try {
+      const response = await fetch("http://localhost:8000/api/extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url, max_reviews: Number(maxReviews), sort: sortPref })
+      });
+      const result = await response.json();
+
+      if (response.ok) {
+        setStats(prev => ({ ...prev, latency: result.latency_ms, rate: result.extraction_rate }));
+        fetchStats(); // Update total scraped
+        fetchReviews(); // update recent table
+      } else {
+        alert("Extraction failed: " + result.detail);
+      }
+    } catch (e) {
+      console.error("Extraction error", e);
+      alert("Failed to connect to backend API");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-[#111016] text-gray-200 font-sans flex flex-col items-center">
@@ -24,8 +86,8 @@ export default function Dashboard() {
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-400">Product URL or ID</label>
             <div className="relative">
-              <input
-                type="text"
+              <input 
+                type="text" 
                 placeholder="https://store.steampowered.com/app/..."
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
@@ -38,10 +100,10 @@ export default function Dashboard() {
             <div className="w-1/2 space-y-2">
               <label className="text-sm font-medium text-gray-400">Max Reviews</label>
               <div className="relative border border-[#2a2a35] rounded-lg bg-[#111016]">
-                <select className="w-full appearance-none bg-transparent p-3 text-white focus:outline-none">
-                  <option className="bg-[#1C1B22] text-white">100 Reviews</option>
-                  <option className="bg-[#1C1B22] text-white">500 Reviews</option>
-                  <option className="bg-[#1C1B22] text-white">1000 Reviews</option>
+                <select value={maxReviews} onChange={(e) => setMaxReviews(e.target.value)} className="w-full appearance-none bg-transparent p-3 text-white focus:outline-none">
+                  <option value="100" className="bg-[#1C1B22] text-white">100 Reviews</option>
+                  <option value="500" className="bg-[#1C1B22] text-white">500 Reviews</option>
+                  <option value="1000" className="bg-[#1C1B22] text-white">1000 Reviews</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-3.5 text-gray-500 pointer-events-none" size={18} />
               </div>
@@ -49,16 +111,20 @@ export default function Dashboard() {
             <div className="w-1/2 space-y-2">
               <label className="text-sm font-medium text-gray-400">Sort Preference</label>
               <div className="relative border border-[#2a2a35] rounded-lg bg-[#111016]">
-                <select className="w-full appearance-none bg-transparent p-3 text-white focus:outline-none">
-                  <option className="bg-[#1C1B22] text-white">Most Helpful</option>
-                  <option className="bg-[#1C1B22] text-white">Most Recent</option>
+                <select value={sortPref} onChange={(e) => setSortPref(e.target.value)} className="w-full appearance-none bg-transparent p-3 text-white focus:outline-none">
+                  <option value="helpful" className="bg-[#1C1B22] text-white">Most Helpful</option>
+                  <option value="recent" className="bg-[#1C1B22] text-white">Most Recent</option>
                 </select>
                 <ChevronDown className="absolute right-3 top-3.5 text-gray-500 pointer-events-none" size={18} />
               </div>
             </div>
           </div>
-          <button className="w-full bg-gradient-to-r from-[#625885] to-[#CCBFF3] hover:opacity-90 hover:shadow-[0_0_10px_#CCBFF3] transition rounded-lg p-3 font-semibold text-white shadow-lg">
-            Start Extraction
+          <button 
+            onClick={handleExtraction} 
+            disabled={loading}
+            className="w-full bg-gradient-to-r from-[#625885] to-[#CCBFF3] hover:opacity-90 hover:shadow-[0_0_10px_#CCBFF3] transition rounded-lg p-3 font-semibold text-white shadow-lg disabled:opacity-50"
+          >
+            {loading ? "Extracting..." : "Start Extraction"}
           </button>
         </div>
 
@@ -82,7 +148,7 @@ export default function Dashboard() {
             </div>
             <div>
               <h3 className="text-xs text-gray-500 mb-1">Queue Position</h3>
-              <div className="text-2xl font-bold text-white">#0</div>
+              <div className="text-2xl font-bold text-white">#{stats.queue}</div>
             </div>
           </div>
         </div>
@@ -107,51 +173,36 @@ export default function Dashboard() {
             </div>
             {/* Rows */}
             <div className="divide-y divide-[#2a2a35]">
-              {/* Row 1 */}
-              <div className="px-6 py-4 grid grid-cols-[1fr_1fr_3fr_1fr_auto] gap-4 items-center">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-[#2a2a35] flex items-center justify-center text-xs font-bold text-[#CCBFF3]">AK</div>
-                  <div className="font-medium text-gray-200">Ananya K.</div>
-                </div>
-                <div className="flex text-gray-400">
-                  {[1, 2, 3, 4, 5].map(i => <Star key={i} size={12} fill="#CCBFF3" color="#CCBFF3" />)}
-                </div>
-                <div className="text-sm text-gray-400 truncate pr-8">The graphics quality exceeded my expectations. Runs perfectly and looks...</div>
-                <div className="flex justify-center">
-                  <span className="px-3 py-1 bg-[#2a2a35] border border-[#3e3e4a] text-[#CCBFF3] rounded-full text-xs font-medium">Positive</span>
-                </div>
-                <div className="text-gray-500 cursor-pointer hover:text-white px-2"><MoreVertical size={16} /></div>
-              </div>
-              {/* Row 2 */}
-              <div className="px-6 py-4 grid grid-cols-[1fr_1fr_3fr_1fr_auto] gap-4 items-center">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-[#2a2a35] flex items-center justify-center text-xs font-bold text-gray-400">RV</div>
-                  <div className="font-medium text-gray-200">Rohan V.</div>
-                </div>
-                <div className="flex text-gray-400">
-                  {[1, 2, 3, 4, 5].map(i => <Star key={i} size={12} fill={i < 4 ? "#CCBFF3" : "transparent"} color={i < 4 ? "#CCBFF3" : "#4a4a5a"} />)}
-                </div>
-                <div className="text-sm text-gray-400 truncate pr-8">Gameplay was slightly delayed but the story is decent for the price point.</div>
-                <div className="flex justify-center">
-                  <span className="px-3 py-1 bg-[#2a2a35] border border-[#3e3e4a] text-gray-400 rounded-full text-xs font-medium">Neutral</span>
-                </div>
-                <div className="text-gray-500 cursor-pointer hover:text-white px-2"><MoreVertical size={16} /></div>
-              </div>
-              {/* Row 3 */}
-              <div className="px-6 py-4 grid grid-cols-[1fr_1fr_3fr_1fr_auto] gap-4 items-center">
-                <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full bg-red-900/30 flex items-center justify-center text-xs font-bold text-red-400">SM</div>
-                  <div className="font-medium text-gray-200">Sara M.</div>
-                </div>
-                <div className="flex text-gray-400">
-                  {[1, 2, 3, 4, 5].map(i => <Star key={i} size={12} fill={i < 2 ? "#CCBFF3" : "transparent"} color={i < 2 ? "#CCBFF3" : "#4a4a5a"} />)}
-                </div>
-                <div className="text-sm text-gray-400 truncate pr-8">The performance is completely off. I ordered an RTX but it feels like an integrated...</div>
-                <div className="flex justify-center">
-                  <span className="px-3 py-1 bg-red-900/20 border border-red-900/50 text-red-400 rounded-full text-xs font-medium">Negative</span>
-                </div>
-                <div className="text-gray-500 cursor-pointer hover:text-white px-2"><MoreVertical size={16} /></div>
-              </div>
+              {reviews.length === 0 ? (
+                <div className="px-6 py-8 text-center text-gray-500">No reviews extracted yet. Run an extraction to populate data.</div>
+              ) : (
+                reviews.map((r, i) => (
+                  <div key={i} className="px-6 py-4 grid grid-cols-[1fr_1fr_3fr_1fr_auto] gap-4 items-center hover:bg-white/[0.02] transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="h-8 w-8 rounded-full bg-[#2a2a35] flex items-center justify-center text-xs font-bold text-[#CCBFF3]">
+                        {r.reviewer_name?.charAt(0) || "U"}
+                      </div>
+                      <div className="font-medium text-gray-200">{r.reviewer_name?.slice(0, 15)}</div>
+                    </div>
+                    <div className="flex text-gray-400">
+                       <span className="px-2.5 py-1 bg-white/10 rounded-md text-xs font-medium text-gray-300">
+                         {r.rating === "Recommended" ? "Up" : r.rating === "Not Recommended" ? "Down" : r.rating}
+                       </span>
+                    </div>
+                    <div className="text-sm text-gray-400 truncate pr-8" title={r.content}>{r.content}</div>
+                    <div className="flex justify-center">
+                      <span className={`px-3 py-1 border text-xs font-medium rounded-full ${
+                        r.sentiment === "Positive" ? "bg-green-400/10 border-green-500/30 text-green-400" :
+                        r.sentiment === "Negative" ? "bg-red-400/10 border-red-500/30 text-red-400" :
+                        "bg-[#2a2a35] border-[#3e3e4a] text-gray-400"
+                      }`}>
+                        {r.sentiment}
+                      </span>
+                    </div>
+                    <div className="text-gray-500 cursor-pointer hover:text-white px-2"><MoreVertical size={16} /></div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
 
@@ -172,6 +223,11 @@ export default function Dashboard() {
     </div>
   );
 }
+
+
+
+
+
 
 
 
