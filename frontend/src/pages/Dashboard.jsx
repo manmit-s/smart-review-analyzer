@@ -134,31 +134,6 @@ export default function Dashboard() {
           </button>
         </div>
 
-        {/* Stats Section */}
-        <div className="w-full flex gap-6">
-          <div className="bg-[#1C1B22] border border-[#2a2a35] rounded-xl p-6 flex-1 relative overflow-hidden">
-            <h3 className="text-xs uppercase tracking-widest text-gray-500 font-semibold mb-2 flex justify-between">Global Status <Activity size={14} className="text-gray-400" /></h3>
-            <div className="text-3xl font-bold text-white mb-4">4.8k <span className="text-sm font-normal text-gray-400">Total Reviews</span></div>
-            <div className="w-full bg-[#111016] rounded-full h-1 mt-auto">
-              <div className="bg-[#625885] h-1 rounded-full w-[65%] shadow-[0_0_10px_#625885]"></div>
-            </div>
-          </div>
-          <div className="bg-[#1C1B22] border border-[#2a2a35] rounded-xl p-6 flex-[2] flex justify-between items-end">
-            <div>
-              <h3 className="text-xs text-gray-500 mb-1">System Latency</h3>
-              <div className="text-2xl font-bold text-white">142<span className="text-sm font-normal text-gray-400">ms</span></div>
-            </div>
-            <div>
-              <h3 className="text-xs text-gray-500 mb-1">Extraction Rate</h3>
-              <div className="text-2xl font-bold text-white">98.2<span className="text-sm font-normal text-gray-400">%</span></div>
-            </div>
-            <div>
-              <h3 className="text-xs text-gray-500 mb-1">Queue Position</h3>
-              <div className="text-2xl font-bold text-white">#{stats.queue}</div>
-            </div>
-          </div>
-        </div>
-
         {/* Table Section */}
         <div className="w-full space-y-4 mt-4">
           <div className="flex justify-between items-center px-1">
