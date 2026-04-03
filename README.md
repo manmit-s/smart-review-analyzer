@@ -14,6 +14,8 @@
 
 The **Smart Review Analyzer** allows users to paste a Steam Store URL or App ID, after which the backend dynamically scrapes recent reviews via the Steam App Review API. The raw text is instantly pushed through a proprietary NLP Lexicon Sentiment mapping engine to assign binary polarization (*Positive*, *Negative*, or *Neutral*) alongside integer ratings natively extracted from Steam's binary recommendation flags.
 
+<img src="project_image.jpeg" alt="Dashboard" style="border-radius: 12px;" />
+
 Scraped reviews are persisted iteratively into a local **PostgreSQL** database, ensuring you can build large datasets spanning hundreds of thousands of reviews across the entire Steam catalog.
 
 ### ✨ Features
@@ -26,7 +28,7 @@ Scraped reviews are persisted iteratively into a local **PostgreSQL** database, 
 ## 📐 ER Diagram Framework
 
 A fully visualized entity-relational schema mapping the underlying SQL interactions has been structurally mapped via PlantUML.
-<img src="ER_Diagram.png" alt="ER diagram" />
+<img src="ER_Diagram.png" alt="ER diagram" style="border-radius: 12px;"/>
 
 ## 🚀 Installation & Setup
 
