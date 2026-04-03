@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Search, Filter, History as HistoryIcon, Clock, ChevronLeft, ChevronRight, RefreshCw, Star, X } from 'lucide-react';
+import { Filter, History as HistoryIcon, Clock, ChevronLeft, ChevronRight, RefreshCw, Star, X } from 'lucide-react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -20,10 +20,31 @@ export default function History() {
     const [rating, setRating] = useState('');
     const [productId, setProductId] = useState('');
     const [isFilterOpen, setIsFilterOpen] = useState(false);
+    const [availableGames, setAvailableGames] = useState([]);
 
     useEffect(() => {
         fetchReviews();
     }, [page, sentiment, rating, productId]);
+
+    useEffect(() => {
+        fetchAvailableGames();
+    }, []);
+
+    const fetchAvailableGames = async () => {
+        try {
+            const response = await fetch(`http://localhost:8000/api/games`);
+            if (response.ok) {
+                const data = await response.json();
+                setAvailableGames(data);
+                // Also prepopulate gameNames cache since we just got them all
+                const namesMap = {};
+                data.forEach(g => { namesMap[g.id] = g.name });
+                setGameNames(prev => ({ ...prev, ...namesMap }));
+            }
+        } catch (error) {
+            console.error('Error fetching available games:', error);
+        }
+    };
 
     const fetchReviews = async () => {
         try {
@@ -153,18 +174,20 @@ export default function History() {
                                     </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <label className="block text-sm font-medium text-gray-400 mb-1">Game ID</label>
-                                    <div className="relative">
-                                        <Search className="absolute left-3 top-3.5 text-gray-500" size={18} />
-                                        <input
-                                            type="text"
+                                    <label className="block text-sm font-medium text-gray-400 mb-1">Filter by Game</label>
+                                    <div className="relative border border-[#2a2a35] rounded-lg bg-[#111016]">
+                                        <select
                                             value={productId}
                                             onChange={(e) => { setProductId(e.target.value); setPage(1); }}
-                                            placeholder="e.g. 730"
-                                            className="w-full bg-[#111016] text-white border border-[#2a2a35] rounded-lg pl-10 pr-4 p-3 focus:outline-none focus:border-[#625885] transition"
-                                            >
-                                            
-                                        </input>
+                                            className="w-full appearance-none bg-transparent p-3 text-white focus:outline-none"
+                                        >
+                                            <option value="" className="bg-[#1C1B22]">All Games</option>
+                                            {availableGames.map(game => (
+                                                <option key={game.id} value={game.id} className="bg-[#1C1B22]">
+                                                    {game.name}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
                                 </div>
                             </div>

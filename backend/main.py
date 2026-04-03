@@ -86,6 +86,16 @@ def get_recent_reviews(
 
 app_name_cache = {}
 
+@app.get("/api/games")
+def get_scraped_games(db: Session = Depends(get_db)):
+    unique_product_ids = db.query(models.Review.product_id).distinct().all()
+    games = []
+    for pid in unique_product_ids:
+        app_id = pid[0]
+        name_info = get_game_name(app_id)
+        games.append({"id": app_id, "name": name_info["name"]})
+    return games
+
 @app.get("/api/games/{app_id}")
 def get_game_name(app_id: str):
     if app_id in app_name_cache:
