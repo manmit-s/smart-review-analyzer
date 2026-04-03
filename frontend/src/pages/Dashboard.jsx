@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { Bell, User, Link as LinkIcon, ChevronDown, Activity, Download, Eye, MoreVertical, ChevronLeft, ChevronRight, Star } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -163,8 +164,7 @@ export default function Dashboard() {
           <div className="flex justify-between items-center px-1">
             <h2 className="text-2xl font-bold text-white">Recent Extractions</h2>
             <div className="flex gap-3">
-              <button className="flex items-center gap-2 px-4 py-2 bg-[#1C1B22] border border-[#2a2a35] rounded-lg text-sm hover:bg-[#2a2a35] hover:shadow-[0_0_10px_#CCBFF3] transition"><Download size={16} /> Export CSV</button>
-              <button className="flex items-center gap-2 px-4 py-2 bg-[#1C1B22] border border-[#2a2a35] rounded-lg text-sm hover:bg-[#2a2a35] hover:shadow-[0_0_10px_#CCBFF3] transition"><Eye size={16} /> View Full Report</button>
+              <Link to="/analytics" className="flex items-center gap-2 px-4 py-2 bg-[#1C1B22] border border-[#2a2a35] rounded-lg text-sm hover:bg-[#2a2a35] hover:shadow-[0_0_10px_#CCBFF3] transition"><Eye size={16} /> View Full Report</Link>
             </div>
           </div>
           <div className="bg-[#1C1B22] border border-[#2a2a35] rounded-xl flex flex-col overflow-hidden">
