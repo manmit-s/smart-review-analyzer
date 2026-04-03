@@ -1,4 +1,5 @@
-import React from 'react';
+with open('frontend/src/pages/Analytics.jsx', 'w', encoding='utf-8') as f:
+    f.write('''import React from 'react';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 import { Database, Star, Smile, Zap, Sparkles } from 'lucide-react';
@@ -108,4 +109,4 @@ export default function Analytics() {
          <Footer />
       </div>
    );
-}
+}''')
