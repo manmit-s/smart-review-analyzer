@@ -11,8 +11,8 @@ import models, schemas
 from database import engine, get_db
 from services.scraper import fetch_steam_reviews
 
-# Create database tables
-models.Base.metadata.drop_all(bind=engine)
+# Create database tables (without dropping them, so data persists)
+# models.Base.metadata.drop_all(bind=engine)
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="SteamReview Analyzer API")
